@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Internal ATK</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  </head>
+<body class="min-h-screen bg-slate-100 text-slate-800">
+  <header class="bg-blue-700 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold">Dashboard Internal ATK/ART Raden Saleh</h1>
+        <p class="text-sm opacity-90">Monitoring Pengambilan ATK/ART Setiap Departemen</p>
+      </div>
+    </div>
+  </header>
+    <section class="max-w-7xl mx-auto px-6 pb-10">
+    <section class="max-w-7xl mx-auto px-6 py-10 grid md:grid-cols-3 gap-6">
+    <div class="bg-white rounded-3xl shadow-lg p-6">
+      <p class="text-sm text-slate-500 mb-2">Total Pengambilan ATK</p>
+      <h3 class="text-3xl font-bold text-green-600" id="totalPengambilan">0 Item</h3>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-lg p-6">
+  <p class="text-sm text-slate-500 mb-2">Departemen Terbanyak</p>
+  <h3 class="text-3xl font-bold text-red-600" id="departemenTerbanyak">-</h3>
+</div>
+
+    <div class="bg-white rounded-3xl shadow-lg p-6">
+      <p class="text-sm text-slate-500 mb-2">ATK Paling Banyak Diambil</p>
+      <h3 class="text-3xl font-bold text-blue-700" id="atkTerbanyak">-</h3>
+    </div>
+  </section>
+        <section class="max-w-7xl mx-auto px-6 pb-10">
+  <div class="bg-white rounded-3xl shadow-lg p-8 mb-10">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div>
+        <h3 class="text-2xl font-bold text-slate-700">Grafik Pengeluaran ATK per Departemen</h3>
+        <p class="text-slate-500 mt-1">Menampilkan total pengeluaran barang berdasarkan departemen.</p>
+      </div>
+    </div>
+
+    <div class="h-[400px]">
+      <canvas id="grafikPengeluaran"></canvas>
+    </div>
+  </div>
+</section>
+  <div class="sticky top-0 z-50 bg-slate-100 border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="bg-white rounded-3xl shadow-lg p-4">
+        <div class="flex flex-wrap gap-3 justify-center">
+          <button onclick="tampilSection('stok-atk-section')" class="bg-blue-700 text-white px-5 py-3 rounded-xl hover:bg-blue-800">Stok ATK</button>
+          <button onclick="tampilSection('database-barang-section')" class="bg-slate-700 text-white px-5 py-3 rounded-xl hover:bg-slate-800">Database Barang</button>
+          <button onclick="tampilSection('master-barang-section')" class="bg-purple-700 text-white px-5 py-3 rounded-xl hover:bg-purple-800">Master Barang</button>
+          <button onclick="tampilSection('master-karyawan-section')" class="bg-orange-600 text-white px-5 py-3 rounded-xl hover:bg-orange-700">Master Karyawan</button>
+          <button onclick="tampilSection('histori-masuk-section')" class="bg-green-600 text-white px-5 py-3 rounded-xl hover:bg-green-700">Histori Masuk</button>
+          <button onclick="tampilSection('histori-keluar-section')" class="bg-red-600 text-white px-5 py-3 rounded-xl hover:bg-red-700">Histori Keluar</button>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="max-w-7xl mx-auto px-6 py-6">
+      
+    </div>
+    <div id="master-barang-section" class="bg-white rounded-3xl shadow-lg p-8 mb-10 scroll-mt-28 hidden">
+      <h3 class="text-2xl font-bold text-purple-700 mb-6">Master Data Barang</h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <input type="text" id="kodeBarang" placeholder="Kode Barang" class="w-full border rounded-xl p-3">
+        <input type="text" id="namaBarang" placeholder="Nama Barang" class="w-full border rounded-xl p-3">
+        <input type="text" id="kategoriBarang" placeholder="Kategori Barang" class="w-full border rounded-xl p-3">
+        <input type="text" id="satuanBarang" placeholder="Satuan Barang (pcs, box, rim, pack)" class="w-full border rounded-xl p-3">
+        <input type="number" id="stokAwal" placeholder="Stok Awal" class="w-full border rounded-xl p-3">
+      </div>
+      <div class="flex flex-wrap gap-3 mt-6">
+        <button onclick="simpanBarang()" class="bg-purple-700 text-white px-6 py-3 rounded-xl hover:bg-purple-800">
+          Simpan Master Barang
+        </button>
+
+        <button onclick="exportBarang()" class="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700">
+          Export Master Barang
+        </button>
+
+        <label for="importFile" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 cursor-pointer inline-flex items-center">
+          Import Master Barang
+        </label>
+        <input type="file" id="importFile" accept=".xlsx" class="hidden" onchange="importBarang(event)">
+      </div>
+    </div>
+
+    <div id="master-karyawan-section" class="bg-white rounded-3xl shadow-lg p-8 mb-10 scroll-mt-28 hidden">
+      <h3 class="text-2xl font-bold text-orange-600 mb-6">Master Data Karyawan</h3>
+      <div class="grid md:grid-cols-2 gap-6">
+        <input type="text" id="namaKaryawan" placeholder="Nama Karyawan" class="w-full border rounded-xl p-3">
+        <input type="text" id="departemenKaryawan" placeholder="Departemen" class="w-full border rounded-xl p-3">
+      </div>
+
+      <div class="flex flex-wrap gap-3 mt-6">
+        <button onclick="simpanKaryawan()" class="bg-orange-600 text-white px-6 py-3 rounded-xl hover:bg-orange-700">
+          Simpan Master Karyawan
+        </button>
+
+        <button onclick="exportKaryawan()" class="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700">
+          Export Karyawan
+        </button>
+
+        <label for="importKaryawanFile" class="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 cursor-pointer inline-flex items-center">
+          Import Karyawan
+        </label>
+        <input type="file" id="importKaryawanFile" accept=".xlsx" class="hidden" onchange="importKaryawan(event)">
+      </div>
+
+      <div class="mt-6 mb-4">
+        <input type="text" id="searchKaryawan" placeholder="Cari nama karyawan atau departemen" class="border rounded-xl px-4 py-3 w-full md:w-96" onkeyup="tampilkanKaryawan()">
+      </div>
+
+      <div class="overflow-x-auto mt-8">
+        <table class="w-full border border-slate-200 rounded-xl overflow-">
+          <thead class="bg-slate-200 text-slate-800">
+            <tr>
+              <th class="p-3 text-left">No</th>
+              <th class="p-3 text-left">Nama Karyawan</th>
+              <th class="p-3 text-left">Departemen</th>
+            </tr>
+          </thead>
+          <tbody id="tabelKaryawan"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="stok-atk-section" class="bg-white rounded-3xl shadow-lg p-8 mb-10 scroll-mt-28">
+      <h3 class="text-2xl font-bold text-blue-700 mb-6">Input Data Stok ATK</h3>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <h4 class="text-xl font-bold text-green-600 mb-4">Pemasukan Stok</h4>
+          <div class="space-y-4">
+            <input type="date" id="tanggalMasuk" class="w-full border rounded-xl p-3">
+
+            <div id="listPemasukanBarang" class="space-y-4">
+              <datalist id="masterBarangList"></datalist>
+              <div class="grid md:grid-cols-2 gap-4 border rounded-2xl p-4 bg-slate-50 pemasukan-item">
+                <div>
+                  <input list="masterBarangList" type="text" class="namaBarangMasuk w-full border rounded-xl p-3" placeholder="Cari atau pilih barang">
+                </div>
+                <div>
+                  <input type="number" class="jumlahBarangMasuk w-full border rounded-xl p-3" placeholder="Jumlah Masuk">
+                </div>
+              </div>
+            </div>
+
+            
+
+            <button onclick="tambahBarisPemasukan()" class="w-full bg-slate-600 text-white py-3 rounded-xl hover:bg-slate-700">
+              Tambah Barang Lagi
+            </button>
+
+            <button onclick="simpanPemasukan()" class="w-full bg-green-600 text-white py-3 rounded-xl hover:bg-green-700">
+              Simpan Pemasukan
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-xl font-bold text-red-600 mb-4">Pengeluaran Stok</h4>
+          <div class="space-y-4">
+            <input type="date" id="tanggalKeluar" class="w-full border rounded-xl p-3">
+
+            <div class="mb-4 grid md:grid-cols-2 gap-4">
+              <input list="masterKaryawanList" type="text" id="namaPengambilGlobal" placeholder="Cari Nama Pengambil / Karyawan" class="w-full border rounded-xl p-3" oninput="isiDepartemenOtomatis()">
+              <input type="text" id="departemenGlobal" placeholder="Departemen" class="w-full border rounded-xl p-3 bg-slate-100" readonly>
+            </div>
+
+            <datalist id="masterKaryawanList"></datalist>
+
+            <div id="listPengeluaranBarang" class="space-y-4">
+              <div class="grid md:grid-cols-[2fr_1fr_auto] gap-4 border rounded-2xl p-4 bg-slate-50 pengeluaran-item">
+                <input list="masterBarangList" type="text" class="namaBarangKeluar w-full min-w-[220px] border rounded-xl p-3" placeholder="Cari atau pilih barang">
+                <input type="number" class="jumlahBarangKeluar w-full border rounded-xl p-3" placeholder="Jumlah Keluar">
+                <input type="hidden" class="departemenKeluar">
+                <div class="flex gap-2">
+                  <input type="hidden" class="pengambilKeluar">
+                  <button type="button" onclick="hapusBarisPengeluaran(this)" class="bg-red-600 text-white px-4 rounded-xl hover:bg-red-700">
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button onclick="tambahBarisPengeluaran()" class="w-full bg-slate-600 text-white py-3 rounded-xl hover:bg-slate-700">
+              Tambah Barang Lagi
+            </button>
+
+            <button onclick="simpanPengeluaran()" class="w-full bg-red-600 text-white py-3 rounded-xl hover:bg-red-700">
+              Simpan Pengeluaran
+            </button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="database-barang-section" class="bg-white rounded-3xl shadow-lg p-8 mt-10 scroll-mt-28">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <h3 class="text-2xl font-bold text-slate-700">Database Stok Barang</h3>
+        <input type="text" id="searchBarang" placeholder="Cari kode, nama barang, kategori, atau satuan" class="border rounded-xl px-4 py-3 w-full md:w-96" onkeyup="tampilkanBarang()">
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full border border-slate-200 rounded-xl overflow-">
+          <thead class="bg-slate-200 text-slate-800">
+            <tr>
+              <th class="p-3 text-left">No</th>
+              <th class="p-3 text-left">Kode</th>
+              <th class="p-3 text-left">Nama Barang</th>
+              <th class="p-3 text-left">Kategori</th>
+              <th class="p-3 text-left">Satuan</th>
+              <th class="p-3 text-left">Stok Awal</th>
+              <th class="p-3 text-left">Stok Masuk</th>
+              <th class="p-3 text-left">Stok Keluar</th>
+              <th class="p-3 text-left">Sisa Stok</th>
+            </tr>
+          </thead>
+          <tbody id="tabelBarang"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    let barangList = JSON.parse(localStorage.getItem('masterBarang')) || [];
+let karyawanList = JSON.parse(localStorage.getItem('masterKaryawan')) || [];
+let historiMasuk = JSON.parse(localStorage.getItem('historiMasuk')) || [];
+let historiKeluar = JSON.parse(localStorage.getItem('historiKeluar')) || [];
+
+const supabaseUrl = 'https://wlnibcoqspxwmylkyolk.supabase.co';
+const supabaseKey = 'sb_publishable_lycr_Pk_EfTZxPmUJ3xsag_isf7AEwS';
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    async function simpanKaryawanKeSupabase(karyawan) {
+  const { error } = await supabaseClient
+    .from('master_karyawan')
+    .insert([{
+      nama: karyawan.nama,
+      departemen: karyawan.departemen
+    }]);
+
+  if (error) {
+    console.log('Gagal simpan karyawan:', error);
+  }
+}
+
+async function simpanHistoriMasukKeSupabase(data) {
+  const { error } = await supabaseClient
+    .from('histori_masuk')
+    .insert([{
+      tanggal: data.tanggal,
+      nama_barang: data.namaBarang,
+      jumlah_masuk: data.jumlahMasuk
+    }]);
+
+  if (error) {
+    console.log('Gagal simpan histori masuk:', error);
+  }
+}
+
+async function simpanHistoriKeluarKeSupabase(data) {
+  const { error } = await supabaseClient
+    .from('histori_keluar')
+    .insert([{
+      tanggal: data.tanggal,
+      nama_barang: data.namaBarang,
+      jumlah_keluar: data.jumlahKeluar,
+      pengambil: data.pengambil,
+      departemen: data.departemen
+    }]);
+
+  if (error) {
+    console.log('Gagal simpan histori keluar:', error);
+  }
+}
+
+async function simpanBarangKeSupabase(barang) {
+  const { error } = await supabaseClient
+    .from('master_barang')
+    .insert([{
+      kode: barang.kode,
+      nama: barang.nama,
+      kategori: barang.kategori,
+      satuan: barang.satuan,
+      stok_awal: barang.stokAwal,
+      stok_masuk: barang.stokMasuk,
+      stok_keluar: barang.stokKeluar,
+      sisa_stok: barang.sisaStok
+    }]);
+
+  if (error) {
+    console.log('Gagal simpan barang:', error);
+  }
+}
+async function updateBarangKeSupabase(barang) {
+  const { error } = await supabaseClient
+    .from('master_barang')
+    .update({
+      stok_masuk: barang.stokMasuk,
+      stok_keluar: barang.stokKeluar,
+      sisa_stok: barang.sisaStok
+    })
+    .eq('kode', barang.kode);
+
+  if (error) {
+    console.log('Gagal update barang:', error);
+  }
+}
+async function loadKaryawanDariSupabase() {
+  const { data, error } = await supabaseClient
+    .from('master_karyawan')
+    .select('*');
+
+  console.log('Data karyawan dari Supabase:', data);
+  console.log('Error karyawan Supabase:', error);
+
+  if (!error && data) {
+    karyawanList = data.map(item => ({
+      nama: item.nama,
+      departemen: item.departemen
+    }));
+
+    localStorage.setItem('masterKaryawan', JSON.stringify(karyawanList));
+
+    tampilkanKaryawan();
+    updateDatalistKaryawan();
+    isiDepartemenOtomatis();
+  }
+}
+
+async function loadBarangDariSupabase() {
+  const { data, error } = await supabaseClient
+    .from('master_barang')
+    .select('*');
+
+  console.log('Data barang dari Supabase:', data);
+  console.log('Error Supabase:', error);
+
+  if (!error && data) {
+    barangList = data.map(item => ({
+      kode: item.kode,
+      nama: item.nama,
+      kategori: item.kategori,
+      satuan: item.satuan,
+      stokAwal: item.stok_awal,
+      stokMasuk: item.stok_masuk,
+      stokKeluar: item.stok_keluar,
+      sisaStok: item.sisa_stok
+    }));
+
+    tampilkanBarang();
+    updateSelectBarang();
+    updateAtkTerbanyak();
+  }
+}
+    async function loadHistoriMasukDariSupabase() {
+  const { data, error } = await supabaseClient
+    .from('histori_masuk')
+    .select('*')
+    .order('tanggal', { ascending: false });
+
+  console.log('Histori masuk:', data);
+  console.log('Error histori masuk:', error);
+
+  if (!error && data) {
+    historiMasuk = data.map(item => ({
+      tanggal: item.tanggal,
+      namaBarang: item.nama_barang,
+      jumlahMasuk: item.jumlah_masuk
+    }));
+
+    localStorage.setItem('historiMasuk', JSON.stringify(historiMasuk));
+    tampilkanHistoriMasuk();
+  }
+}
+
+async function loadHistoriKeluarDariSupabase() {
+  const { data, error } = await supabaseClient
+    .from('histori_keluar')
+    .select('*')
+    .order('tanggal', { ascending: false });
+
+  console.log('Histori keluar:', data);
+  console.log('Error histori keluar:', error);
+
+  if (!error && data) {
+    historiKeluar = data.map(item => ({
+      tanggal: item.tanggal,
+      namaBarang: item.nama_barang,
+      jumlahKeluar: item.jumlah_keluar,
+      pengambil: item.pengambil,
+      departemen: item.departemen
+    }));
+
+    localStorage.setItem('historiKeluar', JSON.stringify(historiKeluar));
+
+    tampilkanHistoriKeluar();
+    renderGrafikPengeluaran();
+    updateDepartemenTerbanyak();
+  }
+}
+      async function simpanBarang() {
+  const kode = document.getElementById('kodeBarang').value;
+  const nama = document.getElementById('namaBarang').value;
+  const kategori = document.getElementById('kategoriBarang').value;
+  const satuan = document.getElementById('satuanBarang').value;
+  const stok = parseInt(document.getElementById('stokAwal').value);
+
+  if (!kode || !nama || !kategori || !satuan || !stok) {
+    alert('Semua data barang harus diisi');
+    return;
+  }
+
+  const barangBaru = {
+    kode,
+    nama,
+    kategori,
+    satuan,
+    stokAwal: stok,
+    stokMasuk: 0,
+    stokKeluar: 0,
+    sisaStok: stok
+  };
+
+  barangList.push(barangBaru);
+  localStorage.setItem('masterBarang', JSON.stringify(barangList));
+
+  await simpanBarangKeSupabase(barangBaru);
+  await loadBarangDariSupabase();
+
+  tampilkanBarang();
+  updateSelectBarang();
+  resetFormBarang();
+  alert('Master barang berhasil disimpan');
+}
+
+    async function simpanKaryawan() {
+      const nama = document.getElementById('namaKaryawan').value;
+      const departemen = document.getElementById('departemenKaryawan').value;
+
+      if (!nama || !departemen) {
+        alert('Nama karyawan dan departemen harus diisi');
+        return;
+      }
+
+      const dataKaryawan = {
+        nama,
+        departemen
+      };
+
+      karyawanList.push(dataKaryawan);
+localStorage.setItem('masterKaryawan', JSON.stringify(karyawanList));
+
+await simpanKaryawanKeSupabase(dataKaryawan);
+
+      document.getElementById('namaKaryawan').value = '';
+      document.getElementById('departemenKaryawan').value = '';
+
+      tampilkanKaryawan();
+      alert('Master karyawan berhasil disimpan');
+    }
+
+    function tampilkanKaryawan() {
+      const tbody = document.getElementById('tabelKaryawan');
+      const keyword = document.getElementById('searchKaryawan') ? document.getElementById('searchKaryawan').value.toLowerCase() : '';
+
+      tbody.innerHTML = '';
+
+      let nomor = 1;
+
+      karyawanList.forEach((karyawan) => {
+        const cocok =
+          karyawan.nama.toLowerCase().includes(keyword) ||
+          karyawan.departemen.toLowerCase().includes(keyword);
+
+        if (!cocok) return;
+        tbody.innerHTML += `
+          <tr class="border-b hover:bg-slate-50 text-slate-800">
+            <td class="p-3">${nomor++}</td>
+            <td class="p-3">${karyawan.nama}</td>
+            <td class="p-3">${karyawan.departemen}</td>
+          </tr>
+        `;
+
+      });
+    }
+
+    function exportKaryawan() {
+      const worksheet = XLSX.utils.json_to_sheet(karyawanList);
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Master Karyawan');
+      XLSX.writeFile(workbook, 'master-karyawan.xlsx');
+    }
+
+    function importKaryawan(event) {
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = async function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const importedData = XLSX.utils.sheet_to_json(worksheet);
+
+          karyawanList = importedData;
+localStorage.setItem('masterKaryawan', JSON.stringify(karyawanList));
+
+for (const karyawan of karyawanList) {
+  await simpanKaryawanKeSupabase({
+    nama: karyawan.nama,
+    departemen: karyawan.departemen
+  });
+}
+
+tampilkanKaryawan();
+updateDatalistKaryawan();
+
+alert('Master karyawan berhasil diimport');
+        } catch (error) {
+          alert('File XLSX gagal dibaca');
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function tambahBarisPemasukan() {
+      const container = document.getElementById('listPemasukanBarang');
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'grid md:grid-cols-2 gap-4 border rounded-2xl p-4 bg-slate-50 pemasukan-item';
+      wrapper.innerHTML = `
+        <div>
+          <input list="masterBarangList" type="text" class="namaBarangMasuk w-full border rounded-xl p-3" placeholder="Cari atau pilih barang">
+        </div>
+        <div class="flex gap-2">
+          <input type="number" class="jumlahBarangMasuk w-full border rounded-xl p-3" placeholder="Jumlah Masuk">
+          <button type="button" onclick="hapusBarisPemasukan(this)" class="bg-red-600 text-white px-4 rounded-xl hover:bg-red-700">
+            Hapus
+          </button>
+        </div>
+      `;
+
+      container.appendChild(wrapper);
+
+      const namaPengambil = document.getElementById('namaPengambilGlobal').value;
+      const departemen = document.getElementById('departemenGlobal').value;
+
+      wrapper.querySelector('.pengambilKeluar').value = namaPengambil;
+      wrapper.querySelector('.departemenKeluar').value = departemen;
+    }
+
+    function updateSelectBarang() {
+      let datalist = document.getElementById('masterBarangList');
+
+      if (!datalist) {
+        datalist = document.createElement('datalist');
+        datalist.id = 'masterBarangList';
+        document.body.appendChild(datalist);
+      }
+
+      datalist.innerHTML = '';
+
+      barangList.forEach(barang => {
+        datalist.innerHTML += `<option value="${barang.nama}">${barang.nama} (${barang.satuan})</option>`;
+      });
+    }
+
+    function hapusBarisPemasukan(button) {
+      const item = button.closest('.pemasukan-item');
+      const totalItem = document.querySelectorAll('.pemasukan-item').length;
+
+      if (totalItem <= 1) {
+        alert('Minimal harus ada satu baris pemasukan');
+        return;
+      }
+
+      item.remove();
+    }
+
+    async function simpanPemasukan() {
+      const namaBarangInputs = document.querySelectorAll('.namaBarangMasuk');
+      const jumlahBarangInputs = document.querySelectorAll('.jumlahBarangMasuk');
+
+      let berhasil = false;
+
+      for (let index = 0; index < namaBarangInputs.length; index++) {
+        const namaBarang = namaBarangInputs[index].value.trim();
+        const jumlahMasuk = parseInt(jumlahBarangInputs[index].value);
+
+        if (!namaBarang || isNaN(jumlahMasuk) || jumlahMasuk <= 0) {
+          continue;
+        }
+
+        const barang = barangList.find(item => {
+          const namaMaster = item.nama.trim().toLowerCase();
+          const namaInput = namaBarang.trim().toLowerCase();
+
+          return (
+            namaMaster === namaInput ||
+            namaInput.includes(namaMaster) ||
+            namaMaster.includes(namaInput)
+          );
+        });
+
+        if (!barang) {
+          continue;
+        }
+
+        barang.stokMasuk = Number(barang.stokMasuk || 0) + jumlahMasuk;
+        barang.sisaStok = Number(barang.sisaStok || 0) + jumlahMasuk;
+
+await updateBarangKeSupabase(barang);
+
+        const dataMasuk = {
+  tanggal: document.getElementById('tanggalMasuk').value,
+  namaBarang,
+  jumlahMasuk
+};
+
+historiMasuk.push(dataMasuk);
+simpanHistoriMasukKeSupabase(dataMasuk);
+
+        localStorage.setItem('historiMasuk', JSON.stringify(historiMasuk));
+        berhasil = true;
+      }
+
+      if (!berhasil) {
+        alert('Tidak ada data pemasukan yang valid');
+        return;
+      }
+
+      localStorage.setItem('masterBarang', JSON.stringify(barangList));
+      tampilkanBarang();
+
+      document.getElementById('listPemasukanBarang').innerHTML = `
+        <div class="grid md:grid-cols-2 gap-4 border rounded-2xl p-4 bg-slate-50 pemasukan-item">
+          <div>
+            <input list="masterBarangList" type="text" class="namaBarangMasuk w-full border rounded-xl p-3" placeholder="Cari atau pilih barang">
+          </div>
+          <div>
+            <input type="number" class="jumlahBarangMasuk w-full border rounded-xl p-3" placeholder="Jumlah Masuk">
+          </div>
+        </div>
+      `;
+
+      updateSelectBarang();
+      document.getElementById('tanggalMasuk').value = '';
+
+      tampilkanHistoriMasuk();
+      alert('Pemasukan stok berhasil disimpan');
+    }
+
+    function updateDatalistKaryawan() {
+      const datalist = document.getElementById('masterKaryawanList');
+      if (!datalist) return;
+
+      datalist.innerHTML = '';
+
+      karyawanList.forEach(karyawan => {
+        datalist.innerHTML += `<option value="${karyawan.nama}">${karyawan.nama}</option>`;
+      });
+    }
+
+    function isiDepartemenOtomatis() {
+      const nama = document.getElementById('namaPengambilGlobal').value.trim().toLowerCase();
+      const departemenInput = document.getElementById('departemenGlobal');
+
+      const karyawan = karyawanList.find(item =>
+        item.nama.trim().toLowerCase() === nama
+      );
+
+      departemenInput.value = karyawan ? karyawan.departemen : '';
+
+      document.querySelectorAll('.pengambilKeluar').forEach(input => {
+        input.value = document.getElementById('namaPengambilGlobal').value;
+      });
+
+      document.querySelectorAll('.departemenKeluar').forEach(input => {
+        input.value = departemenInput.value;
+      });
+    }
+
+    function tambahBarisPengeluaran() {
+      const container = document.getElementById('listPengeluaranBarang');
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'grid md:grid-cols-[2fr_1fr_auto] gap-4 border rounded-2xl p-4 bg-slate-50 pengeluaran-item';
+      wrapper.innerHTML = `
+        <input list="masterBarangList" type="text" class="namaBarangKeluar w-full min-w-[220px] border rounded-xl p-3" placeholder="Cari atau pilih barang">
+        <input type="number" class="jumlahBarangKeluar w-full border rounded-xl p-3" placeholder="Jumlah Keluar">
+        <input type="hidden" class="departemenKeluar">
+                <div class="flex gap-2">
+                  <input type="hidden" class="pengambilKeluar">
+          <button type="button" onclick="hapusBarisPengeluaran(this)" class="bg-red-600 text-white px-4 rounded-xl hover:bg-red-700">
+            Hapus
+          </button>
+        </div>
+      `;
+
+      container.appendChild(wrapper);
+    }
+
+    function hapusBarisPengeluaran(button) {
+      const item = button.closest('.pengeluaran-item');
+      const totalItem = document.querySelectorAll('.pengeluaran-item').length;
+
+      if (totalItem <= 1) {
+        alert('Minimal harus ada satu baris pengeluaran');
+        return;
+      }
+
+      item.remove();
+    }
+
+    async function simpanPengeluaran() {
+      const namaBarangInputs = document.querySelectorAll('.namaBarangKeluar');
+      const jumlahBarangInputs = document.querySelectorAll('.jumlahBarangKeluar');
+
+      let berhasil = false;
+
+      for (let index = 0; index < namaBarangInputs.length; index++) {
+        const namaBarang = namaBarangInputs[index].value.trim();
+        const jumlahKeluar = parseInt(jumlahBarangInputs[index].value);
+
+        if (!namaBarang || isNaN(jumlahKeluar) || jumlahKeluar <= 0) {
+          continue;
+        }
+
+        const barang = barangList.find(item => {
+          const namaMaster = item.nama.trim().toLowerCase();
+          const namaInput = namaBarang.trim().toLowerCase();
+
+          return (
+            namaMaster === namaInput ||
+            namaInput.includes(namaMaster) ||
+            namaMaster.includes(namaInput)
+          );
+        });
+
+        if (!barang) {
+          continue;
+        }
+
+        if (Number(barang.sisaStok || 0) < jumlahKeluar) {
+          continue;
+        }
+
+        barang.stokKeluar = Number(barang.stokKeluar || 0) + jumlahKeluar;
+        barang.sisaStok = Number(barang.sisaStok || 0) - jumlahKeluar;
+
+await updateBarangKeSupabase(barang);
+
+        const dataKeluar = {
+  tanggal: document.getElementById('tanggalKeluar').value,
+  namaBarang,
+  jumlahKeluar,
+  pengambil: document.getElementById('namaPengambilGlobal').value,
+  departemen: document.getElementById('departemenGlobal').value
+};
+
+historiKeluar.push(dataKeluar);
+simpanHistoriKeluarKeSupabase(dataKeluar);
+
+        localStorage.setItem('historiKeluar', JSON.stringify(historiKeluar));
+        berhasil = true;
+      }
+
+      if (!berhasil) {
+        alert('Tidak ada data pengeluaran yang valid');
+        return;
+      }
+
+      localStorage.setItem('masterBarang', JSON.stringify(barangList));
+      tampilkanBarang();
+
+      document.getElementById('listPengeluaranBarang').innerHTML = `
+        <div class="grid md:grid-cols-[2fr_1fr_auto] gap-4 border rounded-2xl p-4 bg-slate-50 pengeluaran-item">
+          <input list="masterBarangList" type="text" class="namaBarangKeluar w-full min-w-[220px] border rounded-xl p-3" placeholder="Cari atau pilih barang">
+          <input type="number" class="jumlahBarangKeluar w-full border rounded-xl p-3" placeholder="Jumlah Keluar">
+          <input type="hidden" class="departemenKeluar">
+                <div class="flex gap-2">
+                  <input type="hidden" class="pengambilKeluar">
+            <button type="button" onclick="hapusBarisPengeluaran(this)" class="bg-red-600 text-white px-4 rounded-xl hover:bg-red-700">
+              Hapus
+            </button>
+          </div>
+        </div>
+      `;
+
+     document.getElementById('tanggalKeluar').value = '';
+
+tampilkanHistoriKeluar();
+renderGrafikPengeluaran();
+updateDepartemenTerbanyak();
+updateAtkTerbanyak();
+alert('Pengeluaran stok berhasil disimpan');
+}
+
+    function tampilkanBarang() {
+      const tbody = document.getElementById('tabelBarang');
+      const totalPengambilan = document.getElementById('totalPengambilan');
+      const keyword = document.getElementById('searchBarang') ? document.getElementById('searchBarang').value.toLowerCase() : '';
+
+      tbody.innerHTML = '';
+
+      let totalKeluar = 0;
+      let nomor = 1;
+
+      barangList.forEach((barang) => {
+        const cocok =
+          barang.kode.toLowerCase().includes(keyword) ||
+          barang.nama.toLowerCase().includes(keyword) ||
+          barang.kategori.toLowerCase().includes(keyword) ||
+          barang.satuan.toLowerCase().includes(keyword);
+
+        if (!cocok) return;
+        totalKeluar += barang.stokKeluar;
+
+        tbody.innerHTML += `
+          <tr class="border-b hover:bg-slate-50 text-slate-800">
+            <td class="p-3">${nomor++}</td>
+            <td class="p-3">${barang.kode}</td>
+            <td class="p-3">${barang.nama}</td>
+            <td class="p-3">${barang.kategori}</td>
+            <td class="p-3">${barang.satuan}</td>
+            <td class="p-3 text-green-600 font-bold">${barang.stokAwal}</td>
+            <td class="p-3 text-blue-600 font-bold">${barang.stokMasuk}</td>
+            <td class="p-3 text-red-600 font-bold">${barang.stokKeluar}</td>
+            <td class="p-3 text-purple-700 font-bold">${barang.sisaStok}</td>
+          </tr>
+        `;
+      });
+
+      totalPengambilan.textContent = totalKeluar + ' Item';
+    }
+
+    function resetFormBarang() {
+      document.getElementById('kodeBarang').value = '';
+      document.getElementById('namaBarang').value = '';
+      document.getElementById('kategoriBarang').value = '';
+      document.getElementById('satuanBarang').value = '';
+      document.getElementById('stokAwal').value = '';
+    }
+
+    function exportBarang() {
+      const worksheet = XLSX.utils.json_to_sheet(barangList);
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Master Barang');
+      XLSX.writeFile(workbook, 'master-barang.xlsx');
+    }
+
+    async function importBarang(event) {
+      const file = event.target.files[0];
+
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = async function(e) {
+        try {
+          document.body.style.cursor = 'wait';
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const importedData = XLSX.utils.sheet_to_json(worksheet);
+
+          barangList = importedData;
+localStorage.setItem('masterBarang', JSON.stringify(barangList));
+
+for (const barang of barangList) {
+  await simpanBarangKeSupabase({
+    kode: barang.kode,
+    nama: barang.nama,
+    kategori: barang.kategori,
+    satuan: barang.satuan,
+    stokAwal: Number(barang.stokAwal || barang.stok_awal || 0),
+    stokMasuk: Number(barang.stokMasuk || barang.stok_masuk || 0),
+    stokKeluar: Number(barang.stokKeluar || barang.stok_keluar || 0),
+    sisaStok: Number(barang.sisaStok || barang.sisa_stok || 0)
+  });
+}
+
+historiMasuk = [];
+historiKeluar = [];
+
+barangList.forEach(barang => {
+  if (Number(barang.stokMasuk || 0) > 0) {
+    historiMasuk.push({
+      tanggal: new Date().toISOString().split('T')[0],
+      namaBarang: barang.nama,
+      jumlahMasuk: Number(barang.stokMasuk || 0)
+    });
+  }
+
+  if (Number(barang.stokKeluar || 0) > 0) {
+    historiKeluar.push({
+      tanggal: new Date().toISOString().split('T')[0],
+      namaBarang: barang.nama,
+      jumlahKeluar: Number(barang.stokKeluar || 0),
+      pengambil: '-',
+      departemen: '-'
+    });
+  }
+});
+
+localStorage.setItem('historiMasuk', JSON.stringify(historiMasuk));
+localStorage.setItem('historiKeluar', JSON.stringify(historiKeluar));
+
+tampilkanBarang();
+tampilkanHistoriMasuk();
+tampilkanHistoriKeluar();
+renderGrafikPengeluaran();
+updateDepartemenTerbanyak();
+updateAtkTerbanyak();
+
+await loadBarangDariSupabase();
+
+setTimeout(async () => {
+  await loadBarangDariSupabase();
+  document.body.style.cursor = 'default';
+  alert('Master barang berhasil diimport dari file XLSX');
+}, 1000);
+
+        } catch (error) {
+  document.body.style.cursor = 'default';
+  alert('File XLSX gagal dibaca');
+  console.log(error);
+}
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function tampilkanHistoriMasuk() {
+      const tbody = document.getElementById('tabelHistoriMasuk');
+      const keyword = document.getElementById('searchHistoriMasuk') ? document.getElementById('searchHistoriMasuk').value.toLowerCase() : '';
+      const bulan = document.getElementById('filterHistoriMasuk') ? document.getElementById('filterHistoriMasuk').value : '';
+
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+
+      [...historiMasuk]
+        .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))
+        .forEach(item => {
+        const cocokKeyword = item.namaBarang.toLowerCase().includes(keyword);
+        const cocokBulan = !bulan || item.tanggal.startsWith(bulan);
+
+        if (!cocokKeyword || !cocokBulan) return;
+
+        tbody.innerHTML += `
+          <tr class="border-b hover:bg-slate-50 text-slate-800">
+            <td class="p-3">${item.tanggal}</td>
+            <td class="p-3">${item.namaBarang}</td>
+            <td class="p-3">${item.jumlahMasuk}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function exportHistoriMasuk() {
+      const bulan = document.getElementById('filterHistoriMasuk').value;
+      const dataExport = historiMasuk.filter(item => !bulan || item.tanggal.startsWith(bulan));
+
+      const worksheet = XLSX.utils.json_to_sheet(dataExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Histori Pemasukan');
+      XLSX.writeFile(workbook, 'histori-pemasukan.xlsx');
+    }
+
+    function tampilkanHistoriKeluar() {
+      const tbody = document.getElementById('tabelHistoriKeluar');
+      const keyword = document.getElementById('searchHistoriKeluar') ? document.getElementById('searchHistoriKeluar').value.toLowerCase() : '';
+      const bulan = document.getElementById('filterHistoriKeluar') ? document.getElementById('filterHistoriKeluar').value : '';
+
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+
+      [...historiKeluar]
+        .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))
+        .forEach(item => {
+        const cocokKeyword =
+          item.namaBarang.toLowerCase().includes(keyword) ||
+          item.pengambil.toLowerCase().includes(keyword);
+
+        const cocokBulan = !bulan || item.tanggal.startsWith(bulan);
+
+        if (!cocokKeyword || !cocokBulan) return;
+
+        tbody.innerHTML += `
+          <tr class="border-b hover:bg-slate-50 text-slate-800">
+            <td class="p-3">${item.tanggal}</td>
+            <td class="p-3">${item.namaBarang}</td>
+            <td class="p-3">${item.jumlahKeluar}</td>
+            <td class="p-3">${item.pengambil}</td>
+            <td class="p-3">${item.departemen}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function exportHistoriKeluar() {
+      const bulan = document.getElementById('filterHistoriKeluar').value;
+      const dataExport = historiKeluar.filter(item => !bulan || item.tanggal.startsWith(bulan));
+
+      const worksheet = XLSX.utils.json_to_sheet(dataExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Histori Pengeluaran');
+      XLSX.writeFile(workbook, 'histori-pengeluaran.xlsx');
+    }
+
+function tampilSection(sectionId) {
+  const semuaSection = [
+    'stok-atk-section',
+    'database-barang-section',
+    'master-barang-section',
+    'master-karyawan-section',
+    'histori-masuk-section',
+    'histori-keluar-section'
+  ];
+
+  semuaSection.forEach(id => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.classList.add('hidden');
+    }
+  });
+
+  const target = document.getElementById(sectionId);
+  if (target) {
+    target.classList.remove('hidden');
+    target.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function renderGrafikPengeluaran() {
+  const canvas = document.getElementById('grafikPengeluaran');
+
+  if (!canvas) return;
+
+  const daftarDepartemen = [
+    'Fin, Acc & Tax',
+    'HCS',
+    'Information & Technology',
+    'Procurement',
+    'Purchasing',
+    'QAQC',
+    'Sales & Marketing',
+    'Technical & Machining',
+    'Warehouse & Logistic'
+  ];
+
+  const dataDepartemen = {};
+
+  daftarDepartemen.forEach(departemen => {
+    dataDepartemen[departemen] = 0;
+  });
+
+  historiKeluar.forEach(item => {
+    const departemen = item.departemen || 'Tidak Diketahui';
+    const jumlah = Number(item.jumlahKeluar || 0);
+
+    if (!dataDepartemen.hasOwnProperty(departemen)) {
+      dataDepartemen[departemen] = 0;
+    }
+
+    dataDepartemen[departemen] += jumlah;
+  });
+
+  const labels = Object.keys(dataDepartemen);
+  const values = Object.values(dataDepartemen);
+
+  if (window.grafikPengeluaranChart) {
+    window.grafikPengeluaranChart.destroy();
+  }
+
+  window.grafikPengeluaranChart = new Chart(canvas, {
+  plugins: [ChartDataLabels],
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Jumlah Pengeluaran',
+        data: values,
+        backgroundColor: [
+          '#2563eb',
+          '#16a34a',
+          '#dc2626',
+          '#9333ea',
+          '#ea580c',
+          '#0891b2',
+          '#ca8a04',
+          '#4f46e5',
+          '#be123c'
+        ],
+        borderRadius: 12
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+  legend: {
+    display: false
+  },
+  tooltip: {
+    callbacks: {
+      label: function(context) {
+        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+        const value = context.raw;
+        const persen = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+
+        return `${value} item (${persen}%)`;
+      }
+    }
+  },
+  datalabels: {
+    anchor: 'end',
+    align: 'top',
+    color: '#334155',
+    font: {
+      weight: 'bold'
+    },
+    formatter: function(value, context) {
+      const total = context.dataset.data.reduce((a, b) => a + b, 0);
+      const persen = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+      return persen + '%';
+    }
+  }
+},
+scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          }
+        }
+      }
+    }
+  });
+}
+
+function updateDepartemenTerbanyak() {
+  const departemenCount = {};
+
+  historiKeluar.forEach(item => {
+    const departemen = item.departemen || 'Tidak Diketahui';
+    const jumlah = Number(item.jumlahKeluar || 0);
+
+    if (!departemenCount[departemen]) {
+      departemenCount[departemen] = 0;
+    }
+
+    departemenCount[departemen] += jumlah;
+  });
+
+  let departemenTerbanyak = '-';
+  let jumlahTerbanyak = 0;
+
+  Object.entries(departemenCount).forEach(([departemen, total]) => {
+    if (total > jumlahTerbanyak) {
+      jumlahTerbanyak = total;
+      departemenTerbanyak = departemen;
+    }
+  });
+
+  const element = document.getElementById('departemenTerbanyak');
+
+  if (element) {
+    element.textContent = departemenTerbanyak;
+  }
+}
+
+function updateAtkTerbanyak() {
+  const atkCount = {};
+
+  barangList.forEach(barang => {
+    const jumlahKeluar = Number(barang.stokKeluar || 0);
+
+    if (!atkCount[barang.nama]) {
+      atkCount[barang.nama] = 0;
+    }
+
+    atkCount[barang.nama] += jumlahKeluar;
+  });
+
+  let atkTerbanyak = '-';
+  let jumlahTerbanyak = 0;
+
+  Object.entries(atkCount).forEach(([namaBarang, total]) => {
+    if (total > jumlahTerbanyak) {
+      jumlahTerbanyak = total;
+      atkTerbanyak = namaBarang;
+    }
+  });
+
+  const element = document.getElementById('atkTerbanyak');
+
+  if (element) {
+    element.textContent = atkTerbanyak;
+  }
+}
+
+function loadMasterBarangDariExcel() {
+  fetch('master-barang.xlsx')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('File master barang tidak ditemukan');
+      }
+
+      return response.arrayBuffer();
+    })
+    .then(data => {
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const importedData = XLSX.utils.sheet_to_json(worksheet);
+
+      barangList = importedData;
+      localStorage.setItem('masterBarang', JSON.stringify(barangList));
+
+      tampilkanBarang();
+      updateSelectBarang();
+      renderGrafikPengeluaran();
+      updateDepartemenTerbanyak();
+      updateAtkTerbanyak();
+    })
+    .catch(error => {
+      console.log('Master barang tidak otomatis dimuat:', error);
+    });
+}
+
+function loadMasterKaryawanDariExcel() {
+  fetch('master-karyawan.xlsx')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('File master karyawan tidak ditemukan');
+      }
+
+      return response.arrayBuffer();
+    })
+    .then(data => {
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const importedData = XLSX.utils.sheet_to_json(worksheet);
+
+      karyawanList = importedData;
+localStorage.setItem('masterKaryawan', JSON.stringify(karyawanList));
+
+tampilkanKaryawan();
+updateDatalistKaryawan();
+isiDepartemenOtomatis();
+
+setTimeout(() => {
+  updateDatalistKaryawan();
+}, 500);
+    })
+    .catch(error => {
+      console.log('Master karyawan tidak otomatis dimuat:', error);
+    });
+}
+
+window.onload = function () {
+  document.getElementById('stok-atk-section').classList.add('hidden');
+  document.getElementById('database-barang-section').classList.add('hidden');
+  document.getElementById('master-barang-section').classList.add('hidden');
+  document.getElementById('master-karyawan-section').classList.add('hidden');
+  document.getElementById('histori-masuk-section').classList.add('hidden');
+  document.getElementById('histori-keluar-section').classList.add('hidden');
+  tampilkanBarang();
+  tampilkanKaryawan();
+  updateSelectBarang();
+updateDatalistKaryawan();
+loadBarangDariSupabase();
+loadKaryawanDariSupabase();
+loadHistoriMasukDariSupabase();
+loadHistoriKeluarDariSupabase();
+
+setTimeout(() => {
+  updateDatalistKaryawan();
+  updateSelectBarang();
+}, 1000);
+
+tampilkanHistoriMasuk();
+tampilkanHistoriKeluar();
+renderGrafikPengeluaran();
+updateDepartemenTerbanyak();
+updateAtkTerbanyak();
+}
+  </script>
+  <section class="max-w-7xl mx-auto px-6 pb-10">
+    <div id="histori-masuk-section" class="bg-white rounded-3xl shadow-lg p-8 mt-10 scroll-mt-28 hidden">
+      <span id="histori-masuk"></span>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <h3 class="text-2xl font-bold text-green-700">Histori Pemasukan Stok</h3>
+        <div class="flex flex-wrap gap-3">
+          <input type="month" id="filterHistoriMasuk" class="border rounded-xl px-4 py-3 text-slate-800 bg-white" onchange="tampilkanHistoriMasuk()">
+          <input type="text" id="searchHistoriMasuk" placeholder="Cari nama barang" class="border rounded-xl px-4 py-3" onkeyup="tampilkanHistoriMasuk()">
+          <button onclick="exportHistoriMasuk()" class="bg-green-600 text-white px-4 py-3 rounded-xl hover:bg-green-700">
+            Export XLSX
+          </button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full border border-slate-200 rounded-xl overflow-hidden">
+          <thead class="bg-slate-200 text-slate-800">
+            <tr>
+              <th class="p-3 text-left">Tanggal</th>
+              <th class="p-3 text-left">Nama Barang</th>
+              <th class="p-3 text-left">Jumlah Masuk</th>
+            </tr>
+          </thead>
+          <tbody id="tabelHistoriMasuk" class="text-slate-800"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="histori-keluar-section" class="bg-white rounded-3xl shadow-lg p-8 mt-10 scroll-mt-28 hidden">
+      <span id="histori-keluar"></span>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <h3 class="text-2xl font-bold text-red-700">Histori Pengeluaran Stok</h3>
+        <div class="flex flex-wrap gap-3">
+          <input type="month" id="filterHistoriKeluar" class="border rounded-xl px-4 py-3 text-slate-800 bg-white" onchange="tampilkanHistoriKeluar()">
+          <input type="text" id="searchHistoriKeluar" placeholder="Cari nama barang atau pengambil" class="border rounded-xl px-4 py-3" onkeyup="tampilkanHistoriKeluar()">
+          <button onclick="exportHistoriKeluar()" class="bg-red-600 text-white px-4 py-3 rounded-xl hover:bg-red-700">
+            Export XLSX
+          </button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full border border-slate-200 rounded-xl overflow-hidden">
+          <thead class="bg-slate-200 text-slate-800">
+            <tr>
+              <th class="p-3 text-left">Tanggal</th>
+              <th class="p-3 text-left">Nama Barang</th>
+              <th class="p-3 text-left">Jumlah Keluar</th>
+              <th class="p-3 text-left">Pengambil</th>
+              <th class="p-3 text-left">Departemen</th>
+            </tr>
+          </thead>
+          <tbody id="tabelHistoriKeluar" class="text-slate-800"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
