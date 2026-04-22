@@ -1231,6 +1231,12 @@ window.onload = function () {
   tampilkanKaryawan();
   updateSelectBarang();
 updateDatalistKaryawan();
+
+localStorage.removeItem('masterBarang');
+localStorage.removeItem('masterKaryawan');
+localStorage.removeItem('historiMasuk');
+localStorage.removeItem('historiKeluar');
+
 loadBarangDariSupabase();
 loadKaryawanDariSupabase();
 loadHistoriMasukDariSupabase();
