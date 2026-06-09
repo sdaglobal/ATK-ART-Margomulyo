@@ -24,7 +24,7 @@
   <header class="bg-blue-700 text-white shadow-lg">
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold">Dashboard Internal ATK/ART Margomulyo</h1>
+        <h1 class="text-3xl font-bold">Dashboard Internal ATK/ART Raden Saleh</h1>
         <p class="text-sm opacity-90">Monitoring Pengambilan ATK/ART Setiap Departemen</p>
       </div>
     </div>
@@ -287,6 +287,7 @@ class="bg-indigo-600 text-white px-5 py-3 rounded-xl hover:bg-indigo-700">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <h3 class="text-2xl font-bold text-slate-700">Database Stok Barang</h3>
         <div class="flex flex-wrap gap-3 items-center">
+
   <input type="text" id="searchBarang"
     placeholder="Cari kode, nama barang, kategori, atau satuan"
     class="border rounded-xl px-4 py-3 w-full md:w-80"
@@ -300,7 +301,15 @@ class="bg-indigo-600 text-white px-5 py-3 rounded-xl hover:bg-indigo-700">
     <option value="menipis">Stok Menipis (<=5)</option>
     <option value="tersedia">Stok Aman (>5)</option>
   </select>
+
+  <button
+    onclick="exportDatabaseBarang()"
+    class="bg-green-600 text-white px-5 py-3 rounded-xl hover:bg-green-700">
+    Export XLSX
+  </button>
+
 </div>
+        
       </div>
       <div class="overflow-x-auto">
         <table class="w-full border border-slate-200 rounded-xl overflow-hidden">
@@ -323,6 +332,68 @@ class="bg-indigo-600 text-white px-5 py-3 rounded-xl hover:bg-indigo-700">
     </div>
   </section>
 
+  <!-- MODAL EDIT HISTORI MASUK -->
+<div id="modalEditMasuk"
+     class="fixed inset-0 bg-black/50 hidden z-50 items-center justify-center">
+
+  <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-xl mx-4">
+
+    <h3 class="text-2xl font-bold text-green-700 mb-6">
+      Edit Histori Pemasukan
+    </h3>
+
+    <input type="hidden" id="editIndexMasuk">
+
+    <div class="space-y-4">
+
+      <div>
+        <label class="block mb-2 font-semibold">Tanggal</label>
+        <input type="date"
+               id="editTanggalMasuk"
+               class="w-full border rounded-xl p-3">
+      </div>
+
+      <div>
+        <label class="block mb-2 font-semibold">Jumlah Masuk</label>
+        <input type="number"
+               id="editJumlahMasuk"
+               class="w-full border rounded-xl p-3">
+      </div>
+
+      <div>
+        <label class="block mb-2 font-semibold">Supplier</label>
+        <input type="text"
+               id="editSupplierMasuk"
+               class="w-full border rounded-xl p-3">
+      </div>
+
+      <div>
+        <label class="block mb-2 font-semibold">Nomor BTB</label>
+        <input type="text"
+               id="editNomorBTBMasuk"
+               class="w-full border rounded-xl p-3">
+      </div>
+
+    </div>
+
+    <div class="flex justify-end gap-3 mt-6">
+
+      <button
+        onclick="tutupModalEditMasuk()"
+        class="px-5 py-3 bg-slate-500 text-white rounded-xl hover:bg-slate-600">
+        Batal
+      </button>
+
+      <button
+        onclick="simpanEditHistoriMasuk()"
+        class="px-5 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700">
+        Simpan Perubahan
+      </button>
+
+    </div>
+
+  </div>
+</div>
   <script>
     let currentSlide = 0;
 
@@ -522,7 +593,7 @@ updateAtkTerbanyak();
   const { data, error } = await supabaseClient
     .from('histori_masuk')
     .select('*')
-    .order('tanggal', { ascending: false });
+    .order('id', { ascending: false });
 
   console.log('Histori masuk:', data);
   console.log('Error histori masuk:', error);
@@ -542,9 +613,9 @@ updateAtkTerbanyak();
 
 async function loadHistoriKeluarDariSupabase() {
     const { data, error } = await supabaseClient
-    .from('histori_keluar')
-    .select('*')
-    .order('tanggal', { ascending: false });
+  .from('histori_keluar')
+  .select('*')
+  .order('id', { ascending: false });
 
   console.log('Histori keluar:', data);
   console.log('Error histori keluar:', error);
@@ -1203,6 +1274,35 @@ function tampilkanBarang() {
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Master Barang');
       XLSX.writeFile(workbook, 'master-barang.xlsx');
     }
+    function exportDatabaseBarang() {
+
+  const dataExport = barangList.map(item => ({
+    Kode: item.kode,
+    Nama_Barang: item.nama,
+    Kategori: item.kategori,
+    Satuan: item.satuan,
+    Stok_Awal: item.stokAwal,
+    Stok_Masuk: item.stokMasuk,
+    Stok_Keluar: item.stokKeluar,
+    Sisa_Stok: item.sisaStok
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(dataExport);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    'Database Stok'
+  );
+
+  const tanggal = new Date().toISOString().split('T')[0];
+
+  XLSX.writeFile(
+    workbook,
+    `database-stok-${tanggal}.xlsx`
+  );
+}
 
     async function importBarang(event) {
       const file = event.target.files[0];
@@ -1292,7 +1392,6 @@ setTimeout(async () => {
       tbody.innerHTML = '';
 
       [...historiMasuk]
-        .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))
         .forEach((item, index) => {
         const cocokKeyword = item.namaBarang.toLowerCase().includes(keyword);
         const cocokBulan = !bulan || item.tanggal.startsWith(bulan);
@@ -1317,16 +1416,95 @@ setTimeout(async () => {
   }
 </td>
   <td class="p-3">
-    <button onclick="hapusHistoriMasuk(${index})"
+  <div class="flex gap-2">
+    <button
+      onclick="editHistoriMasuk(${index})"
+      class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+      Edit
+    </button>
+
+    <button
+      onclick="hapusHistoriMasuk(${index})"
       class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
       Hapus
     </button>
-  </td>
+  </div>
+</td>
 </tr>
 `;
       });
     }
+    function editHistoriMasuk(index) {
+
+  const data = historiMasuk[index];
+
+  document.getElementById('editIndexMasuk').value = index;
+  document.getElementById('editTanggalMasuk').value = data.tanggal;
+  document.getElementById('editJumlahMasuk').value = data.jumlahMasuk;
+  document.getElementById('editSupplierMasuk').value = data.supplier || '';
+  document.getElementById('editNomorBTBMasuk').value = data.nomorBTB || '';
+
+  const modal = document.getElementById('modalEditMasuk');
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+    function tutupModalEditMasuk() {
+
+  const modal = document.getElementById('modalEditMasuk');
+
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+    async function simpanEditHistoriMasuk() {
+
+  const index =
+    Number(document.getElementById('editIndexMasuk').value);
+      const dataLama = {
+  tanggal: historiMasuk[index].tanggal,
+  namaBarang: historiMasuk[index].namaBarang,
+  jumlahMasuk: historiMasuk[index].jumlahMasuk
+};
+
+  historiMasuk[index].tanggal =
+    document.getElementById('editTanggalMasuk').value;
+
+  historiMasuk[index].jumlahMasuk =
+    Number(document.getElementById('editJumlahMasuk').value);
+
+  historiMasuk[index].supplier =
+    document.getElementById('editSupplierMasuk').value;
+
+  historiMasuk[index].nomorBTB =
+    document.getElementById('editNomorBTBMasuk').value;
+
+      const { error } = await supabaseClient
+  .from('histori_masuk')
+  .update({
+    tanggal: document.getElementById('editTanggalMasuk').value,
+    jumlah_masuk: Number(document.getElementById('editJumlahMasuk').value),
+    supplier: document.getElementById('editSupplierMasuk').value,
+    nomor_btb: document.getElementById('editNomorBTBMasuk').value
+  })
+  .match({
+    tanggal: dataLama.tanggal,
+    nama_barang: dataLama.namaBarang,
+    jumlah_masuk: dataLama.jumlahMasuk
+  });
+
+console.log('UPDATE ERROR:', error);
+
+      await loadHistoriMasukDariSupabase();
+await loadBarangDariSupabase();
+      
+  tampilkanHistoriMasuk();
+
+  tutupModalEditMasuk();
+
+  alert('Data berhasil diperbarui');
+}
 async function hapusHistoriMasuk(index) {
+  
   if (!confirm("Yakin ingin menghapus data ini?")) return;
 
   const data = historiMasuk[index];
@@ -1383,7 +1561,6 @@ updateAtkTerbanyak();
       tbody.innerHTML = '';
 
       [...historiKeluar]
-        .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))
         .forEach((item, index) => {
         const cocokKeyword =
           item.namaBarang.toLowerCase().includes(keyword) ||
