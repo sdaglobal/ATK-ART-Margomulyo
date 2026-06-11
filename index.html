@@ -24,7 +24,7 @@
   <header class="bg-blue-700 text-white shadow-lg">
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold">Dashboard Internal ATK/ART Raden Saleh</h1>
+        <h1 class="text-3xl font-bold">Dashboard Internal ATK/ART Margomulyo</h1>
         <p class="text-sm opacity-90">Monitoring Pengambilan ATK/ART Setiap Departemen</p>
       </div>
     </div>
@@ -202,6 +202,13 @@ class="bg-indigo-600 text-white px-5 py-3 rounded-xl hover:bg-indigo-700">
   <input type="text" id="namaSupplier" placeholder="Nama Supplier" class="w-full border rounded-xl p-3">
   <input type="text" id="nomorBTB" placeholder="Nomor BTB" class="w-full border rounded-xl p-3">
 </div>
+            <div>
+  <textarea
+    id="keteranganMasuk"
+    placeholder="Keterangan Pemasukan"
+    class="w-full border rounded-xl p-3"
+    rows="3"></textarea>
+</div>
 
             <div id="listPemasukanBarang" class="space-y-4">
               <datalist id="masterBarangList"></datalist>
@@ -242,6 +249,13 @@ class="bg-indigo-600 text-white px-5 py-3 rounded-xl hover:bg-indigo-700">
               <input list="masterKaryawanList" type="text" id="namaPengambilGlobal" placeholder="Cari Nama Pengambil / Karyawan" class="w-full border rounded-xl p-3" oninput="isiDepartemenOtomatis()">
               <input type="text" id="departemenGlobal" placeholder="Departemen" class="w-full border rounded-xl p-3 bg-slate-100" readonly>
             </div>
+            <div>
+  <textarea
+    id="keteranganKeluar"
+    placeholder="Keterangan Pengeluaran / Tujuan Penggunaan"
+    class="w-full border rounded-xl p-3"
+    rows="3"></textarea>
+</div>
 
             <datalist id="masterKaryawanList"></datalist>
 
@@ -373,6 +387,13 @@ class="bg-indigo-600 text-white px-5 py-3 rounded-xl hover:bg-indigo-700">
                id="editNomorBTBMasuk"
                class="w-full border rounded-xl p-3">
       </div>
+      <div>
+  <label class="block mb-2 font-semibold">Keterangan</label>
+  <textarea
+    id="editKeteranganMasuk"
+    class="w-full border rounded-xl p-3"
+    rows="3"></textarea>
+</div>
 
     </div>
 
@@ -453,12 +474,13 @@ async function simpanHistoriMasukKeSupabase(data) {
   const { error } = await supabaseClient
     .from('histori_masuk')
     .insert([{
-      tanggal: data.tanggal,
-      nama_barang: data.namaBarang,
-      jumlah_masuk: data.jumlahMasuk,
-      supplier: data.supplier,
-      nomor_btb: data.nomorBTB
-    }]);
+  tanggal: data.tanggal,
+  nama_barang: data.namaBarang,
+  jumlah_masuk: data.jumlahMasuk,
+  supplier: data.supplier,
+  nomor_btb: data.nomorBTB,
+  keterangan: data.keterangan
+}]);
 
   if (error) {
     console.log('Gagal simpan histori masuk:', error);
@@ -469,12 +491,13 @@ async function simpanHistoriKeluarKeSupabase(data) {
   const { error } = await supabaseClient
     .from('histori_keluar')
     .insert([{
-      tanggal: data.tanggal,
-      nama_barang: data.namaBarang,
-      jumlah_keluar: data.jumlahKeluar,
-      pengambil: data.pengambil,
-      departemen: data.departemen
-    }]);
+  tanggal: data.tanggal,
+  nama_barang: data.namaBarang,
+  jumlah_keluar: data.jumlahKeluar,
+  pengambil: data.pengambil,
+  departemen: data.departemen,
+  keterangan: data.keterangan
+}]);
 
   if (error) {
     console.log('Gagal simpan histori keluar:', error);
@@ -586,6 +609,14 @@ updateSelectBarang();
 updateSatuanOtomatis();
 updateSisaStokRealtime();
 
+document.querySelectorAll('.namaBarangMasuk').forEach(input => {
+  input.dispatchEvent(new Event('input'));
+});
+
+document.querySelectorAll('.namaBarangKeluar').forEach(input => {
+  input.dispatchEvent(new Event('input'));
+});
+
 updateAtkTerbanyak();
 }
 }
@@ -604,7 +635,8 @@ updateAtkTerbanyak();
   namaBarang: item.nama_barang,
   jumlahMasuk: item.jumlah_masuk,
   supplier: item.supplier || '-',
-  nomorBTB: item.nomor_btb || '-'
+  nomorBTB: item.nomor_btb || '-',
+  keterangan: item.keterangan || '-'
 }));
 
     tampilkanHistoriMasuk();
@@ -622,12 +654,13 @@ async function loadHistoriKeluarDariSupabase() {
 
   if (!error && data) {
     historiKeluar = data.map(item => ({
-      tanggal: item.tanggal,
-      namaBarang: item.nama_barang,
-      jumlahKeluar: item.jumlah_keluar,
-      pengambil: item.pengambil,
-      departemen: item.departemen
-    }));
+  tanggal: item.tanggal,
+  namaBarang: item.nama_barang,
+  jumlahKeluar: item.jumlah_keluar,
+  pengambil: item.pengambil,
+  departemen: item.departemen,
+  keterangan: item.keterangan || '-'
+}));
 
     tampilkanHistoriKeluar();
     renderGrafikPengeluaran();
@@ -880,6 +913,8 @@ updateSatuanOtomatis();
   const supplier = document.getElementById('namaSupplier').value.trim();
   const nomorBTB = document.getElementById('nomorBTB').value.trim();
   const tanggal = document.getElementById('tanggalMasuk').value;
+      const keteranganMasuk =
+  document.getElementById('keteranganMasuk').value.trim();
 
   if (!tanggal) {
     alert("Tanggal wajib diisi!");
@@ -919,12 +954,13 @@ updateSatuanOtomatis();
 
     // 🔥 DATA FINAL MASUK
     const dataMasuk = {
-      tanggal: tanggal,
-      namaBarang: barang.nama,
-      jumlahMasuk,
-      supplier: supplier || '-',
-      nomorBTB: nomorBTB || '-'
-    };
+  tanggal: tanggal,
+  namaBarang: barang.nama,
+  jumlahMasuk,
+  supplier: supplier || '-',
+  nomorBTB: nomorBTB || '-',
+  keterangan: keteranganMasuk || '-'
+};
 
     historiMasuk.push(dataMasuk);
     await simpanHistoriMasukKeSupabase(dataMasuk);
@@ -960,6 +996,7 @@ updateSatuanOtomatis();
   document.getElementById('tanggalMasuk').value = '';
   document.getElementById('namaSupplier').value = '';
   document.getElementById('nomorBTB').value = '';
+  document.getElementById('keteranganMasuk').value = '';
 
 updateSelectBarang();
 updateSatuanOtomatis();
@@ -1057,6 +1094,8 @@ requestAnimationFrame(updateSisaStokRealtime);
     async function simpanPengeluaran() {
       const namaBarangInputs = document.querySelectorAll('.namaBarangKeluar');
       const jumlahBarangInputs = document.querySelectorAll('.jumlahBarangKeluar');
+      const keteranganKeluar =
+  document.getElementById('keteranganKeluar').value.trim();
 
       let berhasil = false;
       for (let index = 0; index < namaBarangInputs.length; index++) {
@@ -1128,7 +1167,8 @@ await updateBarangKeSupabase(barang);
   namaBarang: barang.nama,
   jumlahKeluar,
   pengambil: document.getElementById('namaPengambilGlobal').value,
-  departemen: document.getElementById('departemenGlobal').value
+  departemen: document.getElementById('departemenGlobal').value,
+  keterangan: keteranganKeluar || '-'
 };
 
 historiKeluar.push(dataKeluar);
@@ -1187,6 +1227,7 @@ requestAnimationFrame(updateSisaStokRealtime);
 document.getElementById('tanggalKeluar').value = '';
      document.getElementById('namaPengambilGlobal').value = '';
      document.getElementById('departemenGlobal').value = '';
+      document.getElementById('keteranganKeluar').value = '';
 
 tampilkanHistoriKeluar();
 await loadHistoriKeluarDariSupabase();
@@ -1409,13 +1450,17 @@ setTimeout(async () => {
 </td>
   <td class="p-3">${item.namaBarang}</td>
   <td class="p-3">${item.supplier || '-'}</td>
-  <td class="p-3">${item.nomorBTB || '-'}</td>
-  <td class="p-3">
+<td class="p-3">${item.nomorBTB || '-'}</td>
+
+<td class="p-3">
   ${item.jumlahMasuk} ${
     barangList.find(b => b.nama === item.namaBarang)?.satuan || ''
   }
 </td>
-  <td class="p-3">
+
+<td class="p-3">${item.keterangan || '-'}</td>
+
+<td class="p-3">
   <div class="flex gap-2">
     <button
       onclick="editHistoriMasuk(${index})"
@@ -1443,6 +1488,8 @@ setTimeout(async () => {
   document.getElementById('editJumlahMasuk').value = data.jumlahMasuk;
   document.getElementById('editSupplierMasuk').value = data.supplier || '';
   document.getElementById('editNomorBTBMasuk').value = data.nomorBTB || '';
+      document.getElementById('editKeteranganMasuk').value =
+  data.keterangan || '';
 
   const modal = document.getElementById('modalEditMasuk');
 
@@ -1478,14 +1525,18 @@ setTimeout(async () => {
   historiMasuk[index].nomorBTB =
     document.getElementById('editNomorBTBMasuk').value;
 
+      historiMasuk[index].keterangan =
+  document.getElementById('editKeteranganMasuk').value;
+
       const { error } = await supabaseClient
   .from('histori_masuk')
   .update({
-    tanggal: document.getElementById('editTanggalMasuk').value,
-    jumlah_masuk: Number(document.getElementById('editJumlahMasuk').value),
-    supplier: document.getElementById('editSupplierMasuk').value,
-    nomor_btb: document.getElementById('editNomorBTBMasuk').value
-  })
+  tanggal: document.getElementById('editTanggalMasuk').value,
+  jumlah_masuk: Number(document.getElementById('editJumlahMasuk').value),
+  supplier: document.getElementById('editSupplierMasuk').value,
+  nomor_btb: document.getElementById('editNomorBTBMasuk').value,
+  keterangan: document.getElementById('editKeteranganMasuk').value
+})
   .match({
     tanggal: dataLama.tanggal,
     nama_barang: dataLama.namaBarang,
@@ -1586,10 +1637,11 @@ updateAtkTerbanyak();
   }
 </td>
   <td class="p-3">${item.pengambil}</td>
-  <td class="p-3">${item.departemen}</td>
+<td class="p-3">${item.departemen}</td>
+<td class="p-3">${item.keterangan || '-'}</td>
 
-  <td class="p-3">
-    <button onclick="hapusHistoriKeluar(${index})"
+<td class="p-3">
+  <button onclick="hapusHistoriKeluar(${index})"
       class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700">
       Hapus
     </button>
@@ -2275,30 +2327,24 @@ jumlahFix.onkeyup = hitung;
 
     const isiSatuan = () => {
 
-  const kode = ambilKodeBarang(namaInput.value);
+      const kode = ambilKodeBarang(namaInput.value);
 
-console.log('nama =', namaInput.value);
-console.log('kode =', kode);
+      if (!kode) {
+        satuanInput.value = '';
+        return;
+      }
 
-  if (!kode) {
-    satuanInput.value = '';
-    return;
-  }
+      const barang = barangList.find(item =>
+        item.kode === kode
+      );
 
-  const barang = barangList.find(item =>
-    item.kode === kode
-  );
-
-  console.log('satuanInput =', satuanInput);
-console.log('satuan barang =', barang?.satuan);
-
-satuanInput.value = barang ? barang.satuan : '';
-};
+      satuanInput.value = barang ? barang.satuan : '';
+    };
 
     namaInput.oninput = isiSatuan;
-namaInput.onkeyup = isiSatuan;
-namaInput.onchange = isiSatuan;
-namaInput.onblur = isiSatuan;
+    namaInput.onkeyup = isiSatuan;
+    namaInput.onchange = isiSatuan;
+    namaInput.onblur = isiSatuan;
 
     isiSatuan();
   });
@@ -2312,41 +2358,35 @@ namaInput.onblur = isiSatuan;
 
     const isiSatuan = () => {
 
-  const kode = ambilKodeBarang(namaInput.value);
+      const kode = ambilKodeBarang(namaInput.value);
 
-console.log('nama =', namaInput.value);
-console.log('kode =', kode);
+      if (!kode) {
+        satuanInput.value = '';
+        return;
+      }
 
-  if (!kode) {
-    satuanInput.value = '';
-    return;
-  }
+      const barang = barangList.find(item =>
+        item.kode === kode
+      );
 
-  const barang = barangList.find(item =>
-    item.kode === kode
-  );
-
-  console.log('satuanInput =', satuanInput);
-console.log('satuan barang =', barang?.satuan);
-
-satuanInput.value = barang ? barang.satuan : '';
-};
+      satuanInput.value = barang ? barang.satuan : '';
+    };
 
     namaInput.oninput = isiSatuan;
-namaInput.onkeyup = isiSatuan;
-namaInput.onchange = isiSatuan;
-namaInput.onblur = isiSatuan;
+    namaInput.onkeyup = isiSatuan;
+    namaInput.onchange = isiSatuan;
+    namaInput.onblur = isiSatuan;
 
     isiSatuan();
   });
-      document.querySelectorAll('.namaBarangMasuk').forEach(input => {
-  input.dispatchEvent(new Event('input'));
-});
 
-document.querySelectorAll('.namaBarangKeluar').forEach(input => {
-  input.dispatchEvent(new Event('input'));
-});
+  document.querySelectorAll('.namaBarangMasuk').forEach(input => {
+    input.dispatchEvent(new Event('input'));
+  });
 
+  document.querySelectorAll('.namaBarangKeluar').forEach(input => {
+    input.dispatchEvent(new Event('input'));
+  });
 }
   function updateAtkTerbanyak() {
   const atkCount = {};
@@ -2469,6 +2509,14 @@ updateAtkTerbanyak();
 updateSatuanOtomatis();
 updateSisaStokRealtime();
 
+    document.querySelectorAll('.namaBarangKeluar').forEach(input => {
+  input.dispatchEvent(new Event('input'));
+});
+
+document.querySelectorAll('.namaBarangMasuk').forEach(input => {
+  input.dispatchEvent(new Event('input'));
+});
+
 requestAnimationFrame(() => {
   updateSisaStokRealtime();
 });
@@ -2505,7 +2553,8 @@ requestAnimationFrame(() => {
 <th class="p-3 text-left">Supplier</th>
 <th class="p-3 text-left">Nomor BTB</th>
 <th class="p-3 text-left">Jumlah Masuk</th>
-<th class="p-3 text-left">Hapus</th>
+<th class="p-3 text-left">Keterangan</th>
+<th class="p-3 text-left">Aksi</th>
             </tr>
           </thead>
           <tbody id="tabelHistoriMasuk" class="text-slate-800"></tbody>
@@ -2564,11 +2613,12 @@ requestAnimationFrame(() => {
           <thead class="bg-slate-200 text-slate-800">
             <tr>
               <th class="p-3 text-left">Tanggal</th>
-              <th class="p-3 text-left">Nama Barang</th>
-              <th class="p-3 text-left">Jumlah Keluar</th>
-              <th class="p-3 text-left">Pengambil</th>
-              <th class="p-3 text-left">Departemen</th>
-              <th class="p-3 text-left">Hapus</th>
+<th class="p-3 text-left">Nama Barang</th>
+<th class="p-3 text-left">Jumlah Keluar</th>
+<th class="p-3 text-left">Pengambil</th>
+<th class="p-3 text-left">Departemen</th>
+<th class="p-3 text-left">Keterangan</th>
+<th class="p-3 text-left">Hapus</th>
             </tr>
           </thead>
           <tbody id="tabelHistoriKeluar" class="text-slate-800"></tbody>
